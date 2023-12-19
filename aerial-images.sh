@@ -7,14 +7,14 @@ show_help() {
 Usage: aerial-images [-t|--type] [-y|--year] [-r|--regions] [-p|--png] [-q|--quiet] [-v|--version] [-h|--help] output-directory
 
 Optional parameters and flags:
-  -t|--type        Indicating if RGB, CIR or both datasets should be downloaded. Default: RGB
-				   For 2023, the data is offered as four band stack (RGBI). Thus, this option is ignored when year = 2023.
-  -y|--year        Indicating which year's images should be downloaded. Possible values: ... Default: 2020
-  -r|--regions     Indicating regions to download. Possible values: Mitte, Nord, Nordost, Nordwest, Ost, Sued, Suedost, Suedwest, West. Default: all
-  -p|--png         Indicating if the tiled GeoTiffs get converted to PNG. If not present: False
-  -q|--quiet       Suppress outputs. Default, if not present: False.
-  -v|--version     Print version and exit.
-  -h|--help        Print this help and exit.
+  -t|--type       Indicating if RGB, CIR or both datasets should be downloaded. Default: RGB
+				          For 2023, the data is offered as four band stack (RGBI). Thus, this option is ignored when year = 2023.
+  -y|--year       Indicating which year's images should be downloaded. Possible values: ... Default: 2020
+  -r|--regions    Indicating regions to download. Possible values: Mitte, Nord, Nordost, Nordwest, Ost, Sued, Suedost, Suedwest, West. Default: all
+  -p|--png        Indicating if the tiled GeoTiffs get converted to PNG. If not present: False
+  -q|--quiet      Suppress outputs. Default, if not present: False.
+  -v|--version    Print version and exit.
+  -h|--help       Print this help and exit.
 
 Positional arguments:
   output-directory Path, where all final and intermediate outputs should be saved. May not exist prior to invocation.
