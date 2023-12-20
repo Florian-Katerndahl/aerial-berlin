@@ -8,8 +8,9 @@ Usage: aerial-images [-t|--type] [-y|--year] [-r|--regions] [-p|--png] [-q|--qui
 
 Optional parameters and flags:
   -t|--type       Indicating if RGB, CIR or both datasets should be downloaded. Default: RGB
-                  For 2023, the data is offered as four band stack (RGBI). Thus, this option is ignored when year = 2023.
-  -y|--year       Indicating which year's images should be downloaded. Possible values: ... Default: 2020
+                  For 2021 and 2023, the data is offered as four band stack (RGBI). Thus, this option is ignored when year = 2021 | 2023.
+                  For 1928, the data is offered in grayscale only. Thus, this option is ignored when year = 1928.
+  -y|--year       Indicating which year's images should be downloaded. Possible values: 1928, 2020, 2021, 2023. Default: 2020
   -r|--regions    Indicating regions to download. Possible values: Mitte, Nord, Nordost, Nordwest, Ost, Sued, Suedost, Suedwest, West. Default: all
   -p|--png        Indicating if the tiled GeoTiffs get converted to PNG. If not present: False
   -q|--quiet      Suppress outputs. Default, if not present: False.
@@ -64,7 +65,6 @@ create_directories() {
 
 tile_regions() {
   parallel gdal_retile.py -ps 512 512 -overlap 0 -ot "Byte" -r "near" -co "COMPRESS=LZW" -co "PREDICTOR=2" -s_srs "EPSG:25833" -targetDir "$1/tiles" {} ::: $(find "$1/regions" -name "*tif" -type f)
-  # find "$1/regions" -name "*tif" -type f -execdir gdal_retile.py -ps 512 512 -overlap 0 -ot "Byte" -r "near" -co "COMPRESS=LZW" -co "PREDICTOR=2" -s_srs "EPSG:25833" -targetDir "../tiles" {} +
   return 0
 }
 
@@ -72,8 +72,16 @@ create_stack() {
   return 0
 }
 
+single_convert() {
+  local INPATH=$1
+  local OUTPATH="${INPATH/tif/png}"
+  convert -quiet $INPATH $OUTPATH
+}
+
+export -f single_convert
+
 convert_tiles_to_png() {
-  find "$1/tiles" -maxdepth 1 -type f -name "*tif" -exec /bin/bash -c 'convert $0 $(cut -d . -f1 <<< "$0").png' {} \;
+  parallel single_convert {} ::: $(find "$1/tiles" -maxdepth 1 -type f -name "*tif")
   return 0
 }
 
@@ -139,10 +147,10 @@ while : ; do
       shift ;;
     -p|--png)
       PNG=1
-      shift ;;
+      ;;
     -q|--quiet)
       QUIET=1
-      shift ;;
+      ;;
     -v|--version)
       show_version
       exit 0 ;;
@@ -187,7 +195,6 @@ fi
 
 create_directories $BASE_PATH
 
-#BASE_URL=$(printf "https://fbinter.stadt-berlin.de/fb/atom/DOP/dop20true_%s_%d" $TYPE $YEAR)
 SUFFIX="zip"
 N_DATASETS=${#REGIONS[*]}
 PROCESSED=0
@@ -197,8 +204,13 @@ PROCESSED=0
 for type in "${TYPE[@]}"; do
   if [ $YEAR -eq 2023 ]; then
     type="rgbi"
+  elif [ $YEAR -eq 2021 ]; then
+    type="rgb"
   fi
   BASE_URL=$(printf "https://fbinter.stadt-berlin.de/fb/atom/DOP/dop20true_%s_%d" $type $YEAR)
+  if [ $YEAR -eq 1928 ]; then
+	  BASE_URL="https://fbinter.stadt-berlin.de/fb/atom/luftbilder/1928"
+  fi
   for dataset in "${REGIONS[@]}"; do
     pre_process_tiles "${dataset}" "${BASE_PATH}/raw-data" "${BASE_PATH}/regions" $BASE_URL
   done
