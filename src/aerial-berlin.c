@@ -3,33 +3,75 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-#include <curl/curl.h>
+#include <unistd.h>
 
 #include "aerial-berlin.h"
 
 char *base_url = "https://fbinter.stadt-berlin.de/fb/atom";
 
-void print_help(void) {
+void print_download_help(void) {
     printf(
-        "Usage: aerial-images [-t|--type] [-y|--year] [-r|--regions] [-p|--png] [-q|--quiet] [-v|--version] [-h|--help] output-directory\n\n"
-        "Optional parameters and flags:\n"
+        "Usage: ab-download [-t|--type] [-y|--year] [-r|--regions] [-p|--png] [-q|--quiet] [-v|--version] [-h|--help] output-directory\n\n"
+        "Keyword parameters and optional flags:\n"
         "\t-t|--type       Indicating if RGB, CIR or Grayscale datasets should be downloaded.\n"
-        "\t                For 2021 and 2023, the data is offered as four band stack (RGBI). Thus, this option is ignored when year = 2021 | 2023.\n"
+        "\t                For 2021 and 2023, the data is offered as four band stack (RGBI).\n"
         "\t                For 1928, the data is offered in grayscale only. Thus, this option is ignored when year = 1928.\n"
         "\t-y|--year       Indicating which year's images should be downloaded. Possible values: 1928, 2020, 2021, 2023.\n"
         "\t-r|--regions    Indicating regions to download. Possible values: Mitte, Nord, Nordost, Nordwest, Ost, Sued, Suedost, Suedwest, West.\n"
+        "\t-o|--ortho      Download non-orthorectified images. By default, only orthorectified images are requested.\n"
         "\t-p|--png        Indicating if the tiled GeoTiffs get converted to PNG. If not present: False\n"
         "\t-q|--quiet      Suppress outputs. Default, if not present: False.\n"
         "\t-v|--version    Print version and exit.\n"
         "\t-h|--help       Print this help and exit.\n\n"
         "Positional arguments:\n"
-        "\toutput-directory Path, where all final and intermediate outputs should be saved. May not exist prior to invocation.\n\n"
-        "Copyright: Florian Katerndahl (2023-*)\n"
+        "\toutput-directory Path, where all final and intermediate outputs should be saved. Must exist prior to invocation.\n\n"
+        "Copyright: Florian Katerndahl (2023-*)\n\n"
+        "Known Issues: URL formatting for RGBI imagery form 2021 is broken. You need to request RGB images instead of RGBI images to download four-band datasets.\n"
+    );
+}
+
+void print_tile_help(void) {
+    printf(
+        "Usage: ab-tile [-p|--prefix] [-q|--quiet] [-h|--help] [-v|--version] input-directory output-directory\n\n"
+        "Keyword parameters and optional flags:\n"
+        "\t-p|--prefix        Indicating if the tiled GeoTiffs get converted to PNG. If not present: False\n"
+        "\t-q|--quiet      Suppress outputs. Default, if not present: False.\n"
+        "\t-v|--version    Print version and exit.\n"
+        "\t-h|--help       Print this help and exit.\n\n"
+        "Positional arguments:\n"
+        "\tinput-directory Path to unziped ortho-images\n"
+        "\toutput-directory Path, where all final and intermediate outputs should be saved. Must exist prior to invocation.\n\n"
+        "Copyright: Florian Katerndahl (2023-*)\n\n"
     );
 }
 
 void print_version(void) {
     printf("version: %s\n", VERSION);
+}
+
+void print_options(const options *option) {
+    printf("Options:\n");
+    
+    printf("\tRequested image types: ");
+    for (size_t i = 0; i < option->type_count; i++)
+        printf("%s ", option->requested_type[i]);
+    printf("\n");
+    
+    printf("\tRequested image years: ");
+    for (size_t i = 0; i < option->year_count; i++)
+        printf("%d ", option->year[i]);
+    printf("\n");
+
+    printf("\tRequested image regions: ");
+    for (size_t i = 0; i < option->region_count; i++)
+        printf("%s ", option->requested_region[i]);
+    printf("\n");
+
+    printf("\tConvert tiles to PNG: %d\n", option->convert_to_png);
+
+    printf("\tOutput directory: %s\n", option->outdir);
+
+    return;
 }
 
 options *create_options(void) {
@@ -235,29 +277,4 @@ int parse_image_regions(options *option, const char *optstring) {
     }
 
     return 0;
-}
-
-void print_options(const options *option) {
-    printf("Options:\n");
-    
-    printf("\tRequested image types: ");
-    for (size_t i = 0; i < option->type_count; i++)
-        printf("%s ", option->requested_type[i]);
-    printf("\n");
-    
-    printf("\tRequested image years: ");
-    for (size_t i = 0; i < option->year_count; i++)
-        printf("%d ", option->year[i]);
-    printf("\n");
-
-    printf("\tRequested image regions: ");
-    for (size_t i = 0; i < option->region_count; i++)
-        printf("%s ", option->requested_region[i]);
-    printf("\n");
-
-    printf("\tConvert tiles to PNG: %d\n", option->convert_to_png);
-
-    printf("\tOutput directory: %s\n", option->outdir);
-
-    return;
 }
