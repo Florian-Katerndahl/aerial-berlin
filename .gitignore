@@ -1,1 +1,7 @@
 .idea/
+
+*out
+*.o
+ab-convert
+ab-tile
+ab-download
