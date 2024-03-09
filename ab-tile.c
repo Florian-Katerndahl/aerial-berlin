@@ -76,12 +76,12 @@ int main(int argc, char **argv) {
 
     List *file_list = gather_files(opts->indir);
 
-    /* if (!check_outdir(opts->outdir)) {
+    if (!check_outdir(opts->outdir)) {
         fprintf(stderr, "ERROR: Could not access directory '%s'\n", opts->outdir);
         delete_list(file_list);
         destroy_options(opts);
         return 1;
-    } */
+    }
     
     tile_files(file_list, opts);
 
