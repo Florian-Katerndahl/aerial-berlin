@@ -7,7 +7,6 @@
 #include <gdal/cpl_conv.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <stdint.h>
 
 #include "src/aerial-berlin.h"
 #include "src/tile.h"
