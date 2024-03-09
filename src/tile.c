@@ -7,6 +7,7 @@
 #include <gdal/gdal.h>
 #include <gdal/cpl_conv.h>
 #include <stdint.h>
+#include <strings.h>
 
 #include "tile.h"
 
@@ -62,13 +63,22 @@ List *gather_files(const char *directory) {
             delete_list(root);
             return NULL;
         }
-        written = snprintf(node->base, 1024, "%s", directory);
+        written = snprintf(node->base, 1024, "%s", d_entry->d_name);
         if (written >= 1024) {
             fprintf(stderr, "ERROR: File path longer than 1024 bytes\n");
             closedir(root_dir);
             delete_list(root);
             return NULL;
         }
+        char *file_extension = rindex(node->base, '.');
+        if (file_extension == NULL) {
+            fprintf(stderr, "ERROR: Supplied file name withouth file extension\n");
+            closedir(root_dir);
+            delete_list(root);
+            return NULL;
+        }
+        *file_extension = '\0';
+
         root = node;
     }
 
@@ -163,11 +173,12 @@ void tile_files(List *files, const options *option) {
         for (int x = 0; x < columns; x += option->csize) {
             memset(outpath, 0, 1024);
             for(int y = 0; y < rows; y += option->rsize) {
-                written_chars = snprintf(outpath, 1024, "%s%s%s_X%.4d-Y%.4d.tif", 
+                written_chars = snprintf(outpath, 1024, "%s%s%s-%s-X%.4d_Y%.4d.tif", 
                                          option->outdir,
                                          option->outdir[strlen(option->outdir) -1] == '/' ? "" : "/",
                                          option->prefix,
-                                         x, y);
+                                         files->base,
+                                         x_chunk, y_chunk);
                 if (written_chars >= 1024) {
                     fprintf(stderr, "ERROR: Output file path to long.\n");
                     // TODO proper cleanup
@@ -175,7 +186,7 @@ void tile_files(List *files, const options *option) {
                 }
 
                 GDALDatasetH out_dataset = GDALCreate(GDALGetDriverByName("GTiff"), outpath, option->csize, option->rsize, nbands, dtype, creation_options);
-                GDALSetGeoTransform(out_dataset, geo_transform);
+                GDALSetGeoTransform(out_dataset, geo_transform); // TODO simply copying this value is wrong as it holds coordinates from top pixels
                 GDALSetProjection(out_dataset, projection_ref);
 
                 GDALRasterBandH *out_bands = malloc(sizeof(GDALRasterBandH *) * nbands); // TODO check return value
@@ -184,7 +195,7 @@ void tile_files(List *files, const options *option) {
                     CPLErr write_error =
                       GDALRasterIO(out_bands[i - 1], GF_Write, 0, 0,
                                    option->csize, option->rsize, data[i - 1],
-                                   option->csize, option->rsize, dtype, 0, 0);
+                                   option->csize, option->rsize, dtype, 0, 0); // todo nBXSize & nBYSize are wrong
                   if (write_error != CE_None) {
                     fprintf(stderr, "ERROR: Could not write raster band\n");
                     // TODO proper cleanup
