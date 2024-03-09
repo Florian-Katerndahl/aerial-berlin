@@ -1,6 +1,7 @@
 #include <dirent.h>
 #include <errno.h>
 #include <gdal/cpl_error.h>
+#include <gdal/ogr_srs_api.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -130,17 +131,16 @@ void tile_files(List *files, const options *option) {
         double geo_transform[6];  
 
         if (columns % option->csize != 0) {
-            fprintf(stderr, "ERROR: Provided <> size is not evenly divisible by <>.\n");
+            fprintf(stderr, "ERROR: Columns are not evenly divisible by %d.\n", option->csize);
             // TODO proper cleanup
             exit(69);
         }
         if (rows % option->rsize != 0) {
-            fprintf(stderr, "ERROR: Provided <> size is not evenly divisible by <>.\n");
+            fprintf(stderr, "ERROR: Rows are not evenly divisible by %d.\n", option->rsize);
             // TODO proper cleanup
             exit(69);
         }
 
-        const char *projection_ref = GDALGetProjectionRef(raster_file);
         if (GDALGetGeoTransform(raster_file, geo_transform) != CE_None) {
             fprintf(stderr, "ERROR: Could not read geo transform\n");
             // TODO proper cleanup
@@ -170,8 +170,15 @@ void tile_files(List *files, const options *option) {
 
         char *outpath = malloc(1024 * sizeof(char));  // TODO check return value
         char **creation_options = NULL;
+
+        // since original data does not include projection reference, need to create our own. Hard-coded EPSG:25833
+        OGRSpatialReferenceH spat_ref = OSRNewSpatialReference(NULL);
+        OSRImportFromEPSGA(spat_ref, 25833);
+        char *projection_ref = NULL;
+        OSRExportToWkt(spat_ref, &projection_ref);
         for (int x = 0; x < columns; x += option->csize) {
             memset(outpath, 0, 1024);
+            y_chunk = 0;
             for(int y = 0; y < rows; y += option->rsize) {
                 written_chars = snprintf(outpath, 1024, "%s%s%s-%s-X%.4d_Y%.4d.tif", 
                                          option->outdir,
@@ -186,6 +193,7 @@ void tile_files(List *files, const options *option) {
                 }
 
                 GDALDatasetH out_dataset = GDALCreate(GDALGetDriverByName("GTiff"), outpath, option->csize, option->rsize, nbands, dtype, creation_options);
+                
                 GDALSetGeoTransform(out_dataset, geo_transform); // TODO simply copying this value is wrong as it holds coordinates from top pixels
                 GDALSetProjection(out_dataset, projection_ref);
 
@@ -193,9 +201,9 @@ void tile_files(List *files, const options *option) {
                 for (int i = 1; i <= nbands; i++) {
                     out_bands[i - 1] = GDALGetRasterBand(out_dataset, i);
                     CPLErr write_error =
-                      GDALRasterIO(out_bands[i - 1], GF_Write, 0, 0,
-                                   option->csize, option->rsize, &data[i - 1][x + x*y],
-                                   option->csize, option->rsize, dtype, 0, 0); // TODO something's still off
+                      GDALRasterIO(out_bands[i - 1], GF_Write, 0, 0,option->csize, option->rsize,
+                                   &data[i - 1][x + y * columns],
+                                   option->csize, option->rsize, dtype, 0, columns);
                   if (write_error != CE_None) {
                     fprintf(stderr, "ERROR: Could not write raster band\n");
                     // TODO proper cleanup
@@ -205,8 +213,11 @@ void tile_files(List *files, const options *option) {
 
                 GDALClose(out_dataset);
                 free(out_bands);
+                geo_transform[3] += option->rsize * geo_transform[5]; // north-up image is assumed
                 y_chunk++;
             }
+            geo_transform[0] += option->csize * geo_transform[1]; // north-up image is assumed
+            geo_transform[3] -= ((double) columns / option->rsize) * (option->rsize * geo_transform[5]);
             x_chunk++;
         }
         for (int i = 0; i < nbands; i++) CPLFree(*(data + i));
