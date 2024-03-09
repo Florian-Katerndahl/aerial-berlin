@@ -194,8 +194,8 @@ void tile_files(List *files, const options *option) {
                     out_bands[i - 1] = GDALGetRasterBand(out_dataset, i);
                     CPLErr write_error =
                       GDALRasterIO(out_bands[i - 1], GF_Write, 0, 0,
-                                   option->csize, option->rsize, data[i - 1],
-                                   option->csize, option->rsize, dtype, 0, 0); // todo nBXSize & nBYSize are wrong
+                                   option->csize, option->rsize, &data[i - 1][x + x*y],
+                                   option->csize, option->rsize, dtype, 0, 0); // TODO something's still off
                   if (write_error != CE_None) {
                     fprintf(stderr, "ERROR: Could not write raster band\n");
                     // TODO proper cleanup
