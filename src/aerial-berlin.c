@@ -32,9 +32,11 @@ void print_download_help(void) {
 
 void print_tile_help(void) {
     printf(
-        "Usage: ab-tile [-p|--prefix] [-q|--quiet] [-h|--help] [-v|--version] input-directory output-directory\n\n"
+        "Usage: ab-tile [-p|--prefix] [-r|--row] [-c|--column] [-q|--quiet] [-h|--help] [-v|--version] input-directory output-directory\n\n"
         "Keyword parameters and optional flags:\n"
-        "\t-p|--prefix        Indicating if the tiled GeoTiffs get converted to PNG. If not present: False\n"
+        "\t-p|--prefix     Indicating if the tiled GeoTiffs get converted to PNG. If not present: False\n"
+        "\t-r|--row        Number row-wise pixels per output chunk. Must be evenly divisble by input size. To resample the file, use GDAL utilities.\n"
+        "\t-c|--column     Number column-wise pixels per output chunk. Must be evenly divisble by input size. To resample the file, use GDAL utilities.\n"
         "\t-q|--quiet      Suppress outputs. Default, if not present: False.\n"
         "\t-v|--version    Print version and exit.\n"
         "\t-h|--help       Print this help and exit.\n\n"
@@ -52,22 +54,35 @@ void print_version(void) {
 void print_options(const options *option) {
     printf("Options:\n");
     
-    printf("\tRequested image types: ");
-    for (size_t i = 0; i < option->type_count; i++)
-        printf("%s ", option->requested_type[i]);
-    printf("\n");
+    if (option->type_count || option->year_count || option->region_count) {
+        printf("\tRequested image types: ");
+        for (size_t i = 0; i < option->type_count; i++)
+            printf("%s ", option->requested_type[i]);
+        printf("\n");
     
-    printf("\tRequested image years: ");
-    for (size_t i = 0; i < option->year_count; i++)
-        printf("%d ", option->year[i]);
-    printf("\n");
+        printf("\tRequested image years: ");
+        for (size_t i = 0; i < option->year_count; i++)
+            printf("%d ", option->year[i]);
+        printf("\n");
+    
+        printf("\tRequested image regions: ");
+        for (size_t i = 0; i < option->region_count; i++)
+            printf("%s ", option->requested_region[i]);
+        printf("\n");   
+        
+        printf("\tConvert tiles to PNG: %d\n", option->convert_to_png);
+    }
 
-    printf("\tRequested image regions: ");
-    for (size_t i = 0; i < option->region_count; i++)
-        printf("%s ", option->requested_region[i]);
-    printf("\n");
+    if (option->prefix)
+        printf("\tTile prefix: %s\n", option->prefix);
 
-    printf("\tConvert tiles to PNG: %d\n", option->convert_to_png);
+    if (option->rsize || option->csize) {
+        printf("\tRow size:    %d\n", option->rsize);
+        printf("\tColumn size: %d\n", option->csize);
+    }
+
+    if (option->indir)
+        printf("\tInput directory:  %s\n", option->indir);
 
     printf("\tOutput directory: %s\n", option->outdir);
 

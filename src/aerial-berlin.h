@@ -20,6 +20,10 @@ typedef struct {
     int allow_non_rectified;
     int convert_to_png;
     int quiet;
+    char *prefix;
+    int rsize;
+    int csize;
+    char *indir;
     char *outdir;
 } options;
 
