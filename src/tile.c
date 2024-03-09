@@ -176,6 +176,7 @@ void tile_files(List *files, const options *option) {
         OSRImportFromEPSGA(spat_ref, 25833);
         char *projection_ref = NULL;
         OSRExportToWkt(spat_ref, &projection_ref);
+        OSRDestroySpatialReference(spat_ref);
         for (int x = 0; x < columns; x += option->csize) {
             memset(outpath, 0, 1024);
             y_chunk = 0;
@@ -220,6 +221,7 @@ void tile_files(List *files, const options *option) {
             geo_transform[3] -= ((double) columns / option->rsize) * (option->rsize * geo_transform[5]);
             x_chunk++;
         }
+        CPLFree(projection_ref);
         for (int i = 0; i < nbands; i++) CPLFree(*(data + i));
         free(data);
         GDALClose(raster_file);
