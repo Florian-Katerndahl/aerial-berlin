@@ -87,6 +87,14 @@ void delete_list(List *root) {
     }
 }
 
+int check_outdir(const char *directory) {
+    DIR *dir = opendir(directory);
+    if (dir == NULL) 
+        return 1;
+    closedir(dir);
+    return 0;
+}
+
 void tile_files(List *files, const options *option) {
     int written_chars;
     GDALAllRegister();
