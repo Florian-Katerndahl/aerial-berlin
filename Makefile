@@ -6,9 +6,12 @@ CURL=-lcurl
 GDAL=-I/usr/local/include -L/usr/local/lib -lgdal
 PNG=-lpng16 -I/usr/include/libpng16
 
-.PHONY: all
+.PHONY: all install
 
 all: aerial download tile convert clean
+
+install: aerial download tile convert
+	mv ab-download ab-tile ab-convert /usr/local/bin/
 
 download: ab-download.c aerial
 	${CC} ${CFLAGS} ${CSTD} -c src/download.c -o src/download.o ${CURL}

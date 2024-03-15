@@ -20,6 +20,7 @@ In case your library/inculde paths are different, you may need to change them ac
 
 ```bash
 make
+sudo make install
 make clean
 ```
 
