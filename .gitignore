@@ -2,6 +2,7 @@
 data/
 deps/
 out/
+test/
 
 
 *out
