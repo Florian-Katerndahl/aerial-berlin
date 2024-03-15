@@ -285,7 +285,6 @@ void convert_files(List *files, const options *option)
       data[i] = data_p + i * x * y;
     }
 
-    // TODO in help string note, that order is dependent on args given
     for (int i = 0; i < 3; i++) {
       GDALRasterBandH hband = GDALGetRasterBand(in_raster, option->bands[i]);
 

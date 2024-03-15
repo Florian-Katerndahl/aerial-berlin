@@ -62,6 +62,7 @@ void print_convert_help(void)
     "\tinput-directory Path to unziped ortho-images\n"
     "\toutput-directory Path, where all final and intermediate outputs should be saved. Must exist prior to invocation.\n\n"
     "Copyright: Florian Katerndahl (2023-*)\n\n"
+    "Note: Ordering in output file is dependent of order in [-b|--bands]\n"
   );
 }
 
