@@ -9,13 +9,15 @@
 #define GREEN(X) (X + 1)
 #define BLUE(X)  (X + 2)
 
-typedef struct _node {
-    char *base;
-    char *file;
-    struct _node *next;
+typedef struct _node
+{
+  char *base;
+  char *file;
+  struct _node *next;
 } List;
 
 List *gather_files(const char *directory);
+
 void delete_list(List *root);
 
 int check_outdir(const char *directory);

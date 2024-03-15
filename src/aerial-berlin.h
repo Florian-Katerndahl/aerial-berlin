@@ -10,36 +10,45 @@
 
 extern char *base_url;
 
-typedef struct {
-    size_t type_count;
-    char **requested_type;
-    size_t region_count;
-    char **requested_region;
-    size_t year_count;
-    int *year;
-    int allow_non_rectified;
-    int convert_to_png;
-    int quiet;
-    char *prefix;
-    int rsize;
-    int csize;
-    int *bands;
-    char *indir;
-    char *outdir;
+typedef struct
+{
+  size_t type_count;
+  char **requested_type;
+  size_t region_count;
+  char **requested_region;
+  size_t year_count;
+  int *year;
+  int allow_non_rectified;
+  int convert_to_png;
+  int quiet;
+  char *prefix;
+  int rsize;
+  int csize;
+  int *bands;
+  char *indir;
+  char *outdir;
 } options;
 
 void print_download_help(void);
+
 void print_tile_help(void);
+
 void print_convert_help(void);
+
 void print_version(void);
+
 void print_options(const options *option);
 
 options *create_options(void);
+
 void destroy_options(options *option);
 
 int parse_image_types(options *option, const char *optstring);
+
 int parse_image_years(options *option, const char *optstring);
+
 int parse_image_regions(options *option, const char *optstring);
+
 int parse_bands(options *option, const char *optstring);
 
 #endif // AERIAL_BERLIN_H
