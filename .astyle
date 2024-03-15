@@ -1,0 +1,11 @@
+style=mozilla
+indent=spaces=2
+max-code-length=100
+attach-return-type
+convert-tabs
+break-one-line-headers
+align-reference=name
+align-pointer=name
+pad-header
+pad-oper
+pad-comma
