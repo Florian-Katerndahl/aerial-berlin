@@ -14,11 +14,11 @@ download: ab-download.c aerial
 	${CC} ${CFLAGS} ${CSTD} -c src/download.c -o src/download.o ${CURL}
 	${CC} ${CFLAGS} ${CSTD} -I src/ ab-download.c src/aerial-berlin.o src/download.o -o ab-download ${CURL} 
 
-tile: ab-tile.c aerial
+tile: ab-tile.c aerial src/tile.c
 	${CC} ${CFLAGS} ${CSTD} -c src/tile.c -o src/tile.o ${GDAL} ${PNG}
 	${CC} ${CFLAGS} ${CSTD} -I src/ ab-tile.c src/aerial-berlin.o src/tile.o -o ab-tile ${GDAL}
 
-convert: ab-convert.c aerial
+convert: ab-convert.c aerial src/tile.c
 	${CC} ${CFLAGS} ${CSTD} -c src/tile.c -o src/tile.o ${GDAL} ${PNG}
 	${CC} ${CFLAGS} ${CSTD} -I src/ ab-convert.c src/aerial-berlin.o src/tile.o -o ab-convert ${GDAL} ${PNG}
 
