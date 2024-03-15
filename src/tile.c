@@ -1,17 +1,20 @@
 #include <dirent.h>
 #include <errno.h>
-#include <gdal/cpl_error.h>
-#include <gdal/ogr_srs_api.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <gdal/gdal.h>
 #include <gdal/cpl_conv.h>
+#include <gdal/cpl_error.h>
+#include <gdal/ogr_srs_api.h>
 #include <stdint.h>
 #include <strings.h>
+#include <png.h>
+#include <setjmp.h>
 
 #include "tile.h"
 
+// todo guard against non-exisiting directory? Shouldn't this be done by the switch statement?
 List *gather_files(const char *directory) {
     int written;
     List *root = NULL;
@@ -31,8 +34,10 @@ List *gather_files(const char *directory) {
                 fprintf(stderr, "ERROR: '%s' is not a directory\n", directory);
                 break;
             default:
+                fprintf(stderr, "ERROR: Unknown error.\n");
                 break;
         }
+        exit(1);
     }
 
     while ((d_entry = readdir(root_dir))) {
@@ -106,6 +111,7 @@ int check_outdir(const char *directory) {
     return 0;
 }
 
+// TODO factor GDAL reading/writing out to function?
 void tile_files(List *files, const options *option) {
     int written_chars;
     GDALAllRegister();
@@ -123,6 +129,8 @@ void tile_files(List *files, const options *option) {
         GDALDatasetH raster_file = GDALOpen(files->file, GA_ReadOnly);
         if (raster_file == NULL) {
             fprintf(stderr, "ERROR: Failed to open file '%s'\n", files->file);
+			files = files->next;
+			continue;
         }
 
         int nbands = GDALGetRasterCount(raster_file);
@@ -230,3 +238,157 @@ void tile_files(List *files, const options *option) {
         files = files->next;
     }
 }
+
+// three band tiffs of type GDAL_BYTE are interpreted as RGB
+void convert_files(List *files, const options *option) {
+    GDALAllRegister();
+    int written;
+
+    while (files)
+    {
+        if (strstr(files->file, ".tif") == NULL) {
+            files = files->next;
+            continue;
+        }
+
+        if (!option->quiet)
+            printf("Processing %s\n", files->file);
+
+        GDALDatasetH in_raster = GDALOpen(files->file, GA_ReadOnly);
+        if (in_raster == NULL) {
+            fprintf(stderr, "ERROR: Could not open file '%s'\n", files->file);
+            files = files->next;
+            continue;
+        }
+
+        unsigned long x = GDALGetRasterXSize(in_raster);
+        unsigned long y = GDALGetRasterYSize(in_raster);
+
+        uint8_t *data_p = malloc(sizeof(uint8_t) * 3 * x * y);
+        if (data_p == NULL) {
+            fprintf(stderr, "ERROR: Could not allocate memory for datasets\n");
+            GDALClose(in_raster);
+            return;
+        }
+
+        uint8_t* data[3];
+        for (int i = 0; i < 3; i++) {
+            data[i] = data_p + i * x * y;
+        }
+
+        // TODO in help string note, that order is dependent on args given
+        for (int i = 0; i < 3; i++) {
+            GDALRasterBandH hband = GDALGetRasterBand(in_raster, option->bands[i]);
+            
+            if (GDALGetRasterDataType(hband) != GDT_Byte) {
+                fprintf(stderr, "ERROR: Dataset is not of type GDT_Byte\n");
+                GDALClose(in_raster);
+                return;
+            }
+
+            CPLErr write_error =
+                GDALRasterIO(hband, GF_Read, 0, 0, x, y, data[i], x, y, GDT_Byte, 0, 0);
+            
+            if (write_error != CE_None) {
+                fprintf(stderr, "ERROR: Failed to read raster data\n");
+                GDALClose(in_raster);
+                return;
+            }
+        }
+
+        GDALClose(in_raster);        
+
+        char *outpath = calloc(1024, sizeof(char));
+        if (outpath == NULL) {
+            fprintf(stderr, "ERROR: Could not allocate memory for output file path\n");
+            free(data_p);
+            return;
+        }
+
+        written = snprintf(outpath, 1024, "%s%s%s.png",
+                           option->outdir,
+                           option->outdir[strlen(option->outdir) -1] == '/' ? "" : "/",
+                           files->base);
+
+        if (written >= 1024) {
+            fprintf(stderr, "ERROR: Truncated output path\n");
+            free(data_p);
+            free(outpath);
+            return;
+        }
+
+        // note: outpath could be free immediately. To keep freeing of memory in one place, it's delayed until the end of the loop
+        FILE *outfile = fopen(outpath, "wb");
+        if (outfile == NULL) {
+            fprintf(stderr, "ERROR: Could not open output file %s\n", "test.png");
+            exit(1);
+        }
+        
+        png_structp write_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+        if (!write_ptr) {
+            fprintf(stderr, "ERROR: Could not create writer\n");
+            fclose(outfile);
+            free(data_p);
+            free(outpath);
+            return;
+        }
+
+        png_infop info_ptr = png_create_info_struct(write_ptr);
+        if (!info_ptr) {
+            fprintf(stderr, "ERROR: Could not create info container\n");
+            png_destroy_write_struct(&write_ptr, (png_infopp) NULL);
+            fclose(outfile);
+            free(data_p);
+            free(outpath);
+            return;
+        }
+
+        // some sort of return point for libpng to return to if error occurs?
+        if (setjmp(png_jmpbuf(write_ptr))) {
+            fprintf(stderr, "ERROR: Could not set environemtn savepoint\n");
+            png_destroy_write_struct(&write_ptr, &info_ptr);
+            fclose(outfile);
+            free(data_p);
+            free(outpath);
+            return;
+        }
+
+        png_init_io(write_ptr, outfile);    
+        png_set_IHDR(write_ptr, info_ptr, y, x, 8, PNG_COLOR_TYPE_RGB, PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
+
+        // checks blindly copied from libpng/example.c
+        /* Guard against integer overflow */
+        if (x > PNG_SIZE_MAX/(y*BYTES_PER_PIXEL)) {
+            png_error(write_ptr, "Image_data buffer would be too large");
+        }
+
+        if (x > PNG_UINT_32_MAX/(sizeof (png_bytep)))
+            png_error(write_ptr, "Image is too tall to process in memory");
+
+        png_byte *image = png_malloc(write_ptr, y * x * BYTES_PER_PIXEL);
+        for (size_t i = 0; i < y * x * BYTES_PER_PIXEL; i += BYTES_PER_PIXEL) {
+            image[RED(i)] = data[0][i / BYTES_PER_PIXEL];
+            image[GREEN(i)] = data[1][i / BYTES_PER_PIXEL];
+            image[BLUE(i)] = data[2][i / BYTES_PER_PIXEL];
+        }
+
+        png_bytep row_ptrs[x];
+        
+        for (size_t i = 0; i < x; i++)
+            row_ptrs[i] = image + i * y * BYTES_PER_PIXEL;
+
+        png_set_rows(write_ptr, info_ptr, row_ptrs);
+
+        png_write_png(write_ptr, info_ptr, PNG_TRANSFORM_IDENTITY, NULL);
+
+        png_free(write_ptr, image);
+        png_destroy_write_struct(&write_ptr, &info_ptr);
+
+        fclose(outfile);
+        free(outpath);
+
+        free(data_p);
+
+        files = files->next;
+    }
+}    

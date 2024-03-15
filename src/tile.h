@@ -3,6 +3,12 @@
 
 #include "aerial-berlin.h"
 
+#define BYTES_PER_PIXEL 3
+
+#define RED(X)   (X + 0)
+#define GREEN(X) (X + 1)
+#define BLUE(X)  (X + 2)
+
 typedef struct _node {
     char *base;
     char *file;
@@ -15,5 +21,7 @@ void delete_list(List *root);
 int check_outdir(const char *directory);
 
 void tile_files(List *files, const options *option);
+
+void convert_files(List *files, const options *option);
 
 #endif // TILE_C
