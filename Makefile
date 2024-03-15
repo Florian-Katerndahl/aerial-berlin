@@ -1,9 +1,10 @@
 CC=gcc
-CFLAGS=-Wall -Wextra -Wdouble-promotion -Wuninitialized -Winit-self -pedantic -flto -O1 -fsanitize=undefined,address,leak -ggdb
+CFLAGS=-Wall -Wextra -Wdouble-promotion -Wuninitialized -Winit-self -pedantic -flto -O1 -ggdb -fsanitize=undefined,address,leak 
 RCFLAGS=-Wall -Wextra -Wdouble-promotion -Wuninitialized -Winit-self -pedantic -flto -O1
 CSTD=--std=gnu2x
 CURL=-lcurl
 GDAL=-I/usr/local/include -L/usr/local/lib -lgdal
+PNG=-lpng16 -I/usr/include/libpng16
 
 .PHONY: all
 
@@ -14,11 +15,12 @@ download: ab-download.c aerial
 	${CC} ${CFLAGS} ${CSTD} -I src/ ab-download.c src/aerial-berlin.o src/download.o -o ab-download ${CURL} 
 
 tile: ab-tile.c aerial
-	${CC} ${CFLAGS} ${CSTD} -c src/tile.c -o src/tile.o ${GDAL}
+	${CC} ${CFLAGS} ${CSTD} -c src/tile.c -o src/tile.o ${GDAL} ${PNG}
 	${CC} ${CFLAGS} ${CSTD} -I src/ ab-tile.c src/aerial-berlin.o src/tile.o -o ab-tile ${GDAL}
 
 convert: ab-convert.c aerial
-	${CC} ${CFLAGS} ${CSTD} -I src/ ab-convert.c src/aerial-berlin.o -o ab-convert
+	${CC} ${CFLAGS} ${CSTD} -c src/tile.c -o src/tile.o ${GDAL} ${PNG}
+	${CC} ${CFLAGS} ${CSTD} -I src/ ab-convert.c src/aerial-berlin.o src/tile.o -o ab-convert ${GDAL} ${PNG}
 
 aerial: src/aerial-berlin.c src/aerial-berlin.h
 	${CC} ${CFLAGS} ${CSTD} -c src/aerial-berlin.c -o src/aerial-berlin.o
