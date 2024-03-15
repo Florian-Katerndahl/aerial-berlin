@@ -34,9 +34,24 @@ void print_tile_help(void) {
     printf(
         "Usage: ab-tile [-p|--prefix] [-r|--row] [-c|--column] [-q|--quiet] [-h|--help] [-v|--version] input-directory output-directory\n\n"
         "Keyword parameters and optional flags:\n"
-        "\t-p|--prefix     Indicating if the tiled GeoTiffs get converted to PNG. If not present: False\n"
+        "\t-p|--prefix     Prefix to tiles outputs. Default: NULL\n"
         "\t-r|--row        Number row-wise pixels per output chunk. Must be evenly divisble by input size. To resample the file, use GDAL utilities.\n"
         "\t-c|--column     Number column-wise pixels per output chunk. Must be evenly divisble by input size. To resample the file, use GDAL utilities.\n"
+        "\t-q|--quiet      Suppress outputs. Default, if not present: False.\n"
+        "\t-v|--version    Print version and exit.\n"
+        "\t-h|--help       Print this help and exit.\n\n"
+        "Positional arguments:\n"
+        "\tinput-directory Path to unziped ortho-images\n"
+        "\toutput-directory Path, where all final and intermediate outputs should be saved. Must exist prior to invocation.\n\n"
+        "Copyright: Florian Katerndahl (2023-*)\n\n"
+    );
+}
+
+void print_convert_help(void) {
+    printf(
+        "Usage: ab-tile [-b|--bands] [-q|--quiet] [-h|--help] [-v|--version] input-directory output-directory\n\n"
+        "Keyword parameters and optional flags:\n"
+        "\t-b|--bands      List of bands to export. Must be a list of three integers. Note, that GDAL starts counting bands from 1.\n"
         "\t-q|--quiet      Suppress outputs. Default, if not present: False.\n"
         "\t-v|--version    Print version and exit.\n"
         "\t-h|--help       Print this help and exit.\n\n"
@@ -81,6 +96,13 @@ void print_options(const options *option) {
         printf("\tColumn size: %d\n", option->csize);
     }
 
+    if (option->bands) {
+        for (int i = 0; i < 3; i++) {
+            printf("\tBand %d: %d\n", i, option->bands[i]);
+        }
+        printf("\n");
+    }
+
     if (option->indir)
         printf("\tInput directory:  %s\n", option->indir);
 
@@ -96,6 +118,12 @@ options *create_options(void) {
         exit(EXIT_FAILURE);
     }
 
+    option->bands = calloc(3, sizeof(int));
+    if (option->bands == NULL) {
+        fprintf(stderr, "ERROR: Fauiled to allocate options member");
+        exit(EXIT_FAILURE);
+    } 
+
     return option;
 }
 
@@ -108,6 +136,7 @@ void destroy_options(options *option) {
     free(option->year);
     free(option->requested_region);
     free(option->requested_type);
+    free(option->bands);
     free(option);
     return;
 }
@@ -289,6 +318,35 @@ int parse_image_regions(options *option, const char *optstring) {
             fprintf(stderr, "ERROR: Image type '%s' not allowed.\n", option->requested_region[i]);
             return 1;
         }
+    }
+
+    return 0;
+}
+
+int parse_bands(options *option, const char *optstring) {
+    char *ptr = (char *) optstring;
+    char *endptr = ptr;
+    char *comma;
+    int bands_given = 0;
+    long int band_index;
+
+    while (*ptr && bands_given < 3) {
+        band_index = strtol(ptr, &endptr, 10);
+
+        if ((band_index == 0 && ptr == endptr) || band_index == LONG_MIN || band_index == LONG_MAX) {
+            fprintf(stderr, "ERROR: Failed to convert argument to number\n");
+            return 1;
+        }
+
+        option->bands[bands_given] = (int) band_index;
+        bands_given++;
+        ptr = endptr;
+        ptr++;
+    }
+
+    if (bands_given != 3) {
+        fprintf(stderr, "ERROR: Did not provide three band indicies\n");
+        return 1;
     }
 
     return 0;

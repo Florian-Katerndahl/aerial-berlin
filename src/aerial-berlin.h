@@ -23,12 +23,14 @@ typedef struct {
     char *prefix;
     int rsize;
     int csize;
+    int *bands;
     char *indir;
     char *outdir;
 } options;
 
 void print_download_help(void);
 void print_tile_help(void);
+void print_convert_help(void);
 void print_version(void);
 void print_options(const options *option);
 
@@ -38,7 +40,6 @@ void destroy_options(options *option);
 int parse_image_types(options *option, const char *optstring);
 int parse_image_years(options *option, const char *optstring);
 int parse_image_regions(options *option, const char *optstring);
-
-
+int parse_bands(options *option, const char *optstring);
 
 #endif // AERIAL_BERLIN_H

@@ -52,6 +52,9 @@ int main(int argc, char **argv) {
         destroy_options(opts);
         return 1;
     }
+
+    if (!opts->quiet)
+        print_options(opts);
     
     if (check_outdir(opts->outdir)) {
         fprintf(stderr, "ERROR: Could not access directory '%s'\n", opts->outdir);
