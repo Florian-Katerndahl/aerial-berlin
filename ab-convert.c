@@ -5,8 +5,6 @@
 #include "src/aerial-berlin.h"
 #include "src/tile.h"
 
-// user needs to choose three bands bc png only supports three bands
-
 int main(int argc, char **argv) {
     options *opts = create_options();
 
