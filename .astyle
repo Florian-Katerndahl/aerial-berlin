@@ -9,3 +9,8 @@ align-pointer=name
 pad-header
 pad-oper
 pad-comma
+suffix=none
+exclude=data
+exclude=deps
+exclude=out
+exclude=test
