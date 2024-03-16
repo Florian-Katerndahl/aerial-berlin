@@ -127,7 +127,7 @@ void tile_files(List *files, const options *option)
       files = files->next;
       continue;
     }
-    if (!option->quiet)
+    if (option->verbose)
       printf("Processing %s\n", files->file);
 
     GDALDatasetH raster_file = GDALOpen(files->file, GA_ReadOnly);
@@ -261,7 +261,7 @@ void convert_files(List *files, const options *option)
       continue;
     }
 
-    if (!option->quiet)
+    if (option->verbose)
       printf("Processing %s\n", files->file);
 
     GDALDatasetH in_raster = GDALOpen(files->file, GA_ReadOnly);

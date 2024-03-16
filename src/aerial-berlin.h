@@ -20,7 +20,7 @@ typedef struct
   int *year;
   int allow_non_rectified;
   int convert_to_png;
-  int quiet;
+  int verbose;
   char *prefix;
   int rsize;
   int csize;

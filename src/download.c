@@ -46,7 +46,7 @@ Node *dequeue(Node **queue)
   return item;
 }
 
-void download_datasets(Node *queue, const char *to, const int quiet)
+void download_datasets(Node *queue, const char *to, const int verbose)
 {
   Node *item;
 
@@ -109,7 +109,7 @@ void download_datasets(Node *queue, const char *to, const int quiet)
 
     switch (result) {
     case CURLE_OK:
-      if (!quiet)
+      if (verbose)
         printf("Sucessfully downloaded file '%s'\n", out_path);
       break;
     case CURLE_HTTP_RETURNED_ERROR:

@@ -50,7 +50,7 @@ int main(int argc, char **argv)
       }
       break;
     case 'q':
-      opts->quiet = 1;
+      opts->verbose = 1;
       break;
     case 'v':
       print_version();
@@ -76,7 +76,7 @@ int main(int argc, char **argv)
     return 1;
   }
 
-  if (!opts->quiet)
+  if (opts->verbose)
     print_options(opts);
 
   List *file_list = gather_files(opts->indir);

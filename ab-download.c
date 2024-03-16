@@ -56,7 +56,7 @@ int main(int argc, char *argv[])
       request_opts->convert_to_png = 1;
       break;
     case 'q':
-      request_opts->quiet = 1;
+      request_opts->verbose = 1;
       break;
     case 'v':
       print_version();
@@ -80,7 +80,7 @@ int main(int argc, char *argv[])
     return 1;
   }
 
-  if (!request_opts->quiet)
+  if (request_opts->verbose)
     print_options(request_opts);
 
   switch (curl_global_init(CURL_GLOBAL_ALL)) {
@@ -93,7 +93,7 @@ int main(int argc, char *argv[])
   };
 
   Node *download_queue = queue_from_options(request_opts);
-  download_datasets(download_queue, request_opts->outdir, request_opts->quiet);
+  download_datasets(download_queue, request_opts->outdir, request_opts->verbose);
 
   destroy_options(request_opts);
   curl_global_cleanup();

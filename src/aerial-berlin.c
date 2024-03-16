@@ -12,7 +12,7 @@ char *base_url = "https://fbinter.stadt-berlin.de/fb/atom";
 void print_download_help(void)
 {
   printf(
-    "Usage: ab-download [-t|--type] [-y|--year] [-r|--regions] [-p|--png] [-q|--quiet] [-v|--version] [-h|--help] output-directory\n\n"
+    "Usage: ab-download [-t|--type] [-y|--year] [-r|--regions] [-p|--png] [-v|--verbose] [-v|--version] [-h|--help] output-directory\n\n"
     "Keyword parameters and optional flags:\n"
     "\t-t|--type       Indicating if RGB, CIR or Grayscale datasets should be downloaded.\n"
     "\t                For 2021 and 2023, the data is offered as four band stack (RGBI).\n"
@@ -21,7 +21,7 @@ void print_download_help(void)
     "\t-r|--regions    Indicating regions to download. Possible values: Mitte, Nord, Nordost, Nordwest, Ost, Sued, Suedost, Suedwest, West.\n"
     "\t-o|--ortho      Download non-orthorectified images. By default, only orthorectified images are requested.\n"
     "\t-p|--png        Indicating if the tiled GeoTiffs get converted to PNG. If not present: False\n"
-    "\t-q|--quiet      Suppress outputs. Default, if not present: False.\n"
+    "\t-v|--verbose    Verbose output. Default: False\n"
     "\t-v|--version    Print version and exit.\n"
     "\t-h|--help       Print this help and exit.\n\n"
     "Positional arguments:\n"
@@ -34,12 +34,12 @@ void print_download_help(void)
 void print_tile_help(void)
 {
   printf(
-    "Usage: ab-tile [-p|--prefix] [-r|--row] [-c|--column] [-q|--quiet] [-h|--help] [-v|--version] input-directory output-directory\n\n"
+    "Usage: ab-tile [-p|--prefix] [-r|--row] [-c|--column] [-v|--verbose] [-h|--help] [-v|--version] input-directory output-directory\n\n"
     "Keyword parameters and optional flags:\n"
     "\t-p|--prefix     Prefix to tiles outputs. Default: NULL\n"
     "\t-r|--row        Number row-wise pixels per output chunk. Must be evenly divisble by input size. To resample the file, use GDAL utilities.\n"
     "\t-c|--column     Number column-wise pixels per output chunk. Must be evenly divisble by input size. To resample the file, use GDAL utilities.\n"
-    "\t-q|--quiet      Suppress outputs. Default, if not present: False.\n"
+    "\t-v|--verbose    Verbose output. Default: False\n"
     "\t-v|--version    Print version and exit.\n"
     "\t-h|--help       Print this help and exit.\n\n"
     "Positional arguments:\n"
@@ -52,10 +52,10 @@ void print_tile_help(void)
 void print_convert_help(void)
 {
   printf(
-    "Usage: ab-tile [-b|--bands] [-q|--quiet] [-h|--help] [-v|--version] input-directory output-directory\n\n"
+    "Usage: ab-tile [-b|--bands] [-v|--verbose] [-h|--help] [-v|--version] input-directory output-directory\n\n"
     "Keyword parameters and optional flags:\n"
     "\t-b|--bands      List of bands to export. Must be a list of three integers. Note, that GDAL starts counting bands from 1.\n"
-    "\t-q|--quiet      Suppress outputs. Default, if not present: False.\n"
+    "\t-v|--verbose    Verbose output. Default: False\n"
     "\t-v|--version    Print version and exit.\n"
     "\t-h|--help       Print this help and exit.\n\n"
     "Positional arguments:\n"

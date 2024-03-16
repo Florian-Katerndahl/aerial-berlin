@@ -20,6 +20,6 @@ Node *enqueue(Node *queue, int year, char *region, char *type, int non_rectified
 
 Node *dequeue(Node **queue);
 
-void download_datasets(Node *queue, const char *to, const int quiet);
+void download_datasets(Node *queue, const char *to, const int verbose);
 
 #endif // _DOWNLOAD_H
