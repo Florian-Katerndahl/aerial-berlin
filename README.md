@@ -2,8 +2,6 @@
 
 The programs `ab-download`, `ab-tile` and `ab-convert` are a re-implementation of `aeria-images.sh` in C. They offer convenient ways of downloading, tiling and finally converting aerial imagery publically available of Berlin. While the programs are feature-complete (more or less), this is still a *toy project* and used as a learning exercise. Errors, Bugs and other forms of malfunctioning should be expected - even though all programs are compiled with runtime sanitizers.
 
->Example: The current implementation of `ab-convert` can not work with Grayscale imagery because it expects input files with at least three bands.
-
 ## Installation
 
 ### Installing Dependencies

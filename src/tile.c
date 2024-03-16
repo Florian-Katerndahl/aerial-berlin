@@ -253,6 +253,7 @@ void convert_files(List *files, const options *option)
 {
   GDALAllRegister();
   int written;
+  const int bytes_per_pixel = option->bands_count;
 
   while (files) {
     if (strstr(files->file, ".tif") == NULL) {
@@ -273,19 +274,19 @@ void convert_files(List *files, const options *option)
     unsigned long x = GDALGetRasterXSize(in_raster);
     unsigned long y = GDALGetRasterYSize(in_raster);
 
-    uint8_t *data_p = malloc(sizeof(uint8_t) * 3 * x * y);
+    uint8_t *data_p = malloc(sizeof(uint8_t) * option->bands_count * x * y);
     if (data_p == NULL) {
       fprintf(stderr, "ERROR: Could not allocate memory for datasets\n");
       GDALClose(in_raster);
       return;
     }
 
-    uint8_t *data[3];
-    for (int i = 0; i < 3; i++) {
+    uint8_t *data[option->bands_count];
+    for (int i = 0; i < option->bands_count; i++) {
       data[i] = data_p + i * x * y;
     }
 
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < option->bands_count; i++) {
       GDALRasterBandH hband = GDALGetRasterBand(in_raster, option->bands[i]);
 
       if (GDALGetRasterDataType(hband) != GDT_Byte) {
@@ -362,29 +363,35 @@ void convert_files(List *files, const options *option)
     }
 
     png_init_io(write_ptr, outfile);
-    png_set_IHDR(write_ptr, info_ptr, y, x, 8, PNG_COLOR_TYPE_RGB, PNG_INTERLACE_NONE,
+    png_set_IHDR(write_ptr, info_ptr, y, x, 8, bytes_per_pixel == 3 ? PNG_COLOR_TYPE_RGB : PNG_COLOR_TYPE_GRAY, PNG_INTERLACE_NONE,
                  PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
 
     // checks blindly copied from libpng/example.c
     /* Guard against integer overflow */
-    if (x > PNG_SIZE_MAX / (y * BYTES_PER_PIXEL)) {
+    if (x > PNG_SIZE_MAX / (y * bytes_per_pixel)) {
       png_error(write_ptr, "Image_data buffer would be too large");
     }
 
     if (x > PNG_UINT_32_MAX / (sizeof (png_bytep)))
       png_error(write_ptr, "Image is too tall to process in memory");
 
-    png_byte *image = png_malloc(write_ptr, y * x * BYTES_PER_PIXEL);
-    for (size_t i = 0; i < y * x * BYTES_PER_PIXEL; i += BYTES_PER_PIXEL) {
-      image[RED(i)] = data[0][i / BYTES_PER_PIXEL];
-      image[GREEN(i)] = data[1][i / BYTES_PER_PIXEL];
-      image[BLUE(i)] = data[2][i / BYTES_PER_PIXEL];
+    png_byte *image = png_malloc(write_ptr, y * x * bytes_per_pixel);
+    if (bytes_per_pixel == 3) {
+      for (size_t i = 0; i < y * x * bytes_per_pixel; i += bytes_per_pixel) {
+        image[RED(i)] = data[0][i / bytes_per_pixel];
+        image[GREEN(i)] = data[1][i / bytes_per_pixel];
+        image[BLUE(i)] = data[2][i / bytes_per_pixel];
+      }
+    } else {
+      for (size_t i = 0; i < y * x; i++) {
+        image[i] = data[0][i];
+      }
     }
 
     png_bytep row_ptrs[x];
 
     for (size_t i = 0; i < x; i++)
-      row_ptrs[i] = image + i * y * BYTES_PER_PIXEL;
+      row_ptrs[i] = image + i * y * bytes_per_pixel;
 
     png_set_rows(write_ptr, info_ptr, row_ptrs);
 

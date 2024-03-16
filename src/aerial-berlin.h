@@ -25,6 +25,7 @@ typedef struct
   int rsize;
   int csize;
   int *bands;
+  int bands_count;
   char *indir;
   char *outdir;
 } options;

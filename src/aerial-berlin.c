@@ -103,7 +103,7 @@ void print_options(const options *option)
   }
 
   if (option->bands) {
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < option->bands_count; i++) {
       printf("\tBand %d: %d\n", i, option->bands[i]);
     }
     printf("\n");
@@ -352,14 +352,20 @@ int parse_bands(options *option, const char *optstring)
 
     option->bands[bands_given] = (int) band_index;
     bands_given++;
+
+    if (*ptr != '\0' && *endptr == '\0')
+      break;
+
     ptr = endptr;
     ptr++;
   }
 
-  if (bands_given != 3) {
-    fprintf(stderr, "ERROR: Did not provide three band indicies\n");
+  if (bands_given != 3 && bands_given != 1) {
+    fprintf(stderr, "ERROR: Did not provide correct number of band indicies. Must be 1 or 3, got %d\n", bands_given);
     return 1;
   }
+
+  option->bands_count = bands_given;
 
   return 0;
 }
