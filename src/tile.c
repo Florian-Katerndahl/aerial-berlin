@@ -105,7 +105,7 @@ void delete_list(List *root)
   }
 }
 
-int check_outdir(const char *directory)
+int check_dir(const char *directory)
 {
   DIR *dir = opendir(directory);
   if (dir == NULL)

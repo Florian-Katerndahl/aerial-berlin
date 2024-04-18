@@ -20,7 +20,7 @@ List *gather_files(const char *directory);
 
 void delete_list(List *root);
 
-int check_outdir(const char *directory);
+int check_dir(const char *directory);
 
 void tile_files(List *files, const options *option);
 
