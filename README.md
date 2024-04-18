@@ -17,7 +17,7 @@ To re-compile GDAL, follow the instructions listed [here](https://github.com/bog
 In case your library/inculde paths are different, you may need to change them accordingly in the Makefile.
 
 ```bash
-make
+make release
 sudo make install
 make clean
 ```
