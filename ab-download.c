@@ -8,6 +8,7 @@
 
 #include "src/aerial-berlin.h"
 #include "src/download.h"
+#include "src/tile.h"
 
 int main(int argc, char *argv[])
 {
@@ -82,6 +83,12 @@ int main(int argc, char *argv[])
 
   if (request_opts->verbose)
     print_options(request_opts);
+
+  if (check_dir(request_opts->outdir)) {
+    fprintf(stderr, "ERROR: Could not access directory '%s'\n", request_opts->outdir);
+    destroy_options(request_opts);
+    return 1;
+  }
 
   switch (curl_global_init(CURL_GLOBAL_ALL)) {
   case CURLE_FAILED_INIT:

@@ -79,14 +79,19 @@ int main(int argc, char **argv)
   if (opts->verbose)
     print_options(opts);
 
-  List *file_list = gather_files(opts->indir);
-
-  if (check_outdir(opts->outdir)) {
-    fprintf(stderr, "ERROR: Could not access directory '%s'\n", opts->outdir);
-    delete_list(file_list);
+  if (check_dir(opts->indir)) {
+    fprintf(stderr, "ERROR: Could not access directory '%s'\n", opts->indir);
     destroy_options(opts);
     return 1;
   }
+
+  if (check_dir(opts->outdir)) {
+    fprintf(stderr, "ERROR: Could not access directory '%s'\n", opts->outdir);
+    destroy_options(opts);
+    return 1;
+  }
+
+  List *file_list = gather_files(opts->indir);
 
   tile_files(file_list, opts);
 
