@@ -1,6 +1,6 @@
 CC=gcc
-CFLAGS=-Wall -Wextra -Wdouble-promotion -Wuninitialized -Winit-self -pedantic -flto -O1 -ggdb -fsanitize=undefined,address,leak 
-RCFLAGS=-Wall -Wextra -Wdouble-promotion -Wuninitialized -Winit-self -pedantic -flto -O1
+CFLAGS=-Wall -Wextra -Wdouble-promotion -Wuninitialized -Winit-self -pedantic -flto -Og -ggdb -fsanitize=undefined,address,leak #-fanalyze
+RCFLAGS=-Wall -Wextra -Wdouble-promotion -Wuninitialized -Winit-self -pedantic -flto -O3
 CSTD=--std=gnu2x
 CURL=-lcurl
 GDAL=-I/usr/local/include -L/usr/local/lib -lgdal
