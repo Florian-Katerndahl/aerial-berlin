@@ -1,0 +1,20 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: aerial-berlin
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Florian
+    family-names: Katerndahl
+    email: florian@katerndahl.com
+repository-code: 'https://github.com/Florian-Katerndahl/aerial-berlin'
+abstract: >-
+  Convenient ways of downloading, tiling and finally
+  converting aerial imagery of Berlin.
+license: GPL-2.0-only
+version: 0.1.0
+date-released: '2024-05-27'
