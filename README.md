@@ -22,6 +22,9 @@ sudo make install
 make clean
 ```
 
+> [!NOTE]
+> Alternatively, you can use a Docker image with ECW support such as this one: `floriankaterndahl/ecw2tiff:latest`.
+
 ## Code Styling
 
 The `astyle` formatting options can be found in `.astyle`. To reformat any C files, run the following command
